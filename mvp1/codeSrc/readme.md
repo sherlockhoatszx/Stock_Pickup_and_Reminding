@@ -1,6 +1,4 @@
 项目最小可用单元1.0版本的描述：
 功能清单
 
-- [x] 功能1:filter the rowdata when close price cross the ma5
-
-- [ ]  功能2
+- [x] 功能1:遍历中证500筛选股票特征：15分钟K图价格10天来第一次突破MA5均线。

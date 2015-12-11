@@ -15,6 +15,18 @@ import tushare as ts
 from datetime import date
 from numpy import any
 
+# today =date.today()
+# x = ts.get_hist_data('601318',ktype='60',start ='2015-12-01',end = '2015-12-05')
+# error happens:' can't compare datetime.date to unicode',when i try to replace the end value
+# with today
+# print x
+# x['judger']=x['close']-x['ma5']
+# x['judger']=x['judger']*1
+# x['increaseRate']=x['judger']/x['ma5']
+# y = x[x.increaseRate>0.02]
+# above is to filter the dataframe with the condition:
+# close price is 2% more than ma5
+
 
 count = 0
 

@@ -32,7 +32,6 @@ count = 0
 
 
 def stock_filter(code, begin):
-
     """
     Function to decide whether a stock meets the criteria: 1) close price over ma[60] 2) first
      time 3) for 2 percent. To approximate, use ma5 in 15 minutes level to replace average
@@ -43,8 +42,8 @@ def stock_filter(code, begin):
     :return: True if the stock satisfies the criterion, or else False
     """
     global count
-    print 'Processing %s (%s) ... ' % (code, count)
-    count = count + 1
+    # print 'Processing %s (%s) ... ' % (code, count)
+    count += 1
     data = ts.get_hist_data(code, ktype='60', start=begin)  # ktype-minute candlestick data
     # 有效突破 ma5: 超过 ma5 两个百分点
     data['chm'] = (data['close'] - 1.02 * data['ma5']) > 0
@@ -58,64 +57,69 @@ def stock_filter(code, begin):
 
     return True
 
-def verHammer(code,begin):
-    """Function to recoganize if the chart fits the revers hammer
-    criteria: before today ,the line is in decrease curve,highprice 6% more than lowprice, 
-    and open price is 2%more than lowprice,and closeprice is less than 1% above the lowprice.
-    :param code:stock's code string
-    :param begin:beginning date
+
+def ver_hammer(code, begin):
+    """Function to recognise if the chart fits the revers hammer
+    criteria: before today ,the line is in decrease curve,high 6% more than low,
+    and open is 2% more than low, and close is less than 1% above the low.
+    :param code: stock's code string
+    :param begin: beginning date
     :return:    True if the stock satisfies the criterion, or else False
     """
     global count
-    print 'Processing %s (%s) ... ' % (code, count)
-    count = count + 1
+    # print 'Processing %s (%s) ... ' % (code, count)
+    count += 1
     data = ts.get_hist_data(code, ktype='60', start=begin)  # ktype-minute candlestick
     nor = len(data.index)
+    if nor < 4:
+        return False
     
-    try:
-        x=data.loc['2015-12-11 15:00:00',["open","close","high","low"]]
+    x = data.loc[data.index[0],["open","close","high","low"]]
+    y = data.close
 
-        y=data.close
-        if y[1]<y[2]and y[2]<y[3]:
-            if x.high/x.low >1.1 and x.close/x.low <1.01 and x.open/x.close<1.03:
-                return True
-            else:
-                return False
-    
-    except KeyError:
-        pass
+    if y[1] < y[2] <y[3] \
+            and x.high / x.low > 1.1 \
+            and x.close / x.low < 1.01 \
+            and x.open / x.close < 1.03:
+        return True
 
+    return False
+
+# 参见 https://github.com/sherlockhoatszx/Stock_Pickup_and_Reminding/issues/7
+filter_funcs = [stock_filter, ver_hammer]
     
     
-def spr():
+def spr(filter_func, begin):
     """
     Main interface
+    :param filter_func: 股票筛选函数,返回 True or False
+    :param begin: beginning date
     :return: a filtered stock list
     """
     global count
+
+    # get full stock list
+    # print 'Getting stock list ...',
+    stock_list = ts.get_zz500s().code
+    # print 'Done: %s stocks' % len(stock_list)
+    # filtering process
+    count = 0
+    print "筛选方式 %s" % filter_func.__name__
+    return filter(lambda x: filter_func(x, begin), stock_list)
+
+
+if __name__ == '__main__':
     today = date.today().strftime('%Y-%m-%d').encode()
     trx_date = ts.get_hist_data('sh').index
 
     if today in trx_date:
         # four days included today
-        begin = trx_date[2].encode()
+        _begin = trx_date[2].encode()
     else:
         # four days excluded today
-        begin = trx_date[3].encode()
-    print 'Starting from %s ...' % str(begin)
+        _begin = trx_date[3].encode()
+    print 'Starting from %s ...' % str(_begin)
 
-    # get full stock list
-    print 'Getting stock list ...',
-    stock_list = ts.get_zz500s().code
-    print 'Done: %s stocks' % len(stock_list)
-    # filtering process
-    count = 0
-    return filter(lambda x: stock_filter(x, begin), stock_list)
-    
-    return filter(lambda x: verHammer(x,begin), stock_list)
-    
+    for func in filter_funcs:
+        print spr(func, _begin)
 
-
-if __name__ == '__main__':
-    stocks = spr()
-    print stocks

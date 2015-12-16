@@ -85,7 +85,33 @@ def verHammer(code,begin):
     except KeyError:
         pass
 
-    
+def feature3(code,begin,end):
+    '''15分钟价格第一次上穿ma60(ma60需要计算）或者ma20第一次上穿ma60
+        在15分钟的k线数据中取最近60个close price算术平均值为ma60,ma20可以直接通过ts获取无需自行计算
+        :param code: stock's code string
+        :param begin: beginning date
+        :param end: end date
+        :return: True if the stock satisfies the criterion, or else False
+    '''
+    global count
+    print 'Processing %s (%s) in feature3...' % (code, count)
+    count = count + 1
+    #取最近5天的数据计算ma60
+    data_5days = ts.get_hist_data(code, ktype='15', start=end,end=begin)
+    #获取15分钟k线用作判断价格是否穿越ma60,数据按照时间升序排列
+    data_15_mins = ts.get_hist_data(code,ktype='15',start=begin).sort_index()
+    #股票停牌导致没有数据?
+    if len(data_15_mins.index) == 0:
+        return False
+    else:
+        for i in range(len(data_15_mins.index)):
+            #取最近60个记录的close算术均值
+            ma60 = data_5days[i:60+i].mean()['close']
+            if data_15_mins['close'][i] > ma60 \
+                or data_15_mins['ma20'][i] > ma60:
+                    return True
+            else:
+                    return False    
     
 def spr():
     """
@@ -99,11 +125,13 @@ def spr():
     if today in trx_date:
         # four days included today
         begin = trx_date[2].encode()
+        end   = trx_date[7].encode()
     else:
         # four days excluded today
         begin = trx_date[3].encode()
+        end   = trx_date[8].encode()
     print 'Starting from %s ...' % str(begin)
-
+    print 'Starting from %s ...' % str(end)
     # get full stock list
     print 'Getting stock list ...',
     stock_list = ts.get_zz500s().code
@@ -114,6 +142,7 @@ def spr():
     
     return filter(lambda x: verHammer(x,begin), stock_list)
     
+    return filter(lambda x: feature3(x,begin,end),stock_list)
 
 
 if __name__ == '__main__':

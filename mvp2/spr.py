@@ -74,7 +74,7 @@ def ver_hammer(code, begin):
 
     return False
 
-
+'''
 def feature3(code,begin):
     '''15分钟价格第一次上穿ma60(ma60需要计算）或者ma20第一次上穿ma60
         在15分钟的k线数据中取最近60个close price算术平均值为ma60,ma20可以直接通过ts获取无需自行计算
@@ -103,7 +103,7 @@ def feature3(code,begin):
             else:
                     return False    
 # 参见 https://github.com/sherlockhoatszx/Stock_Pickup_and_Reminding/issues/7
-#filter_funcs = [stock_filter, ver_hammer,feature3]
+#filter_funcs = [stock_filter, ver_hammer,feature3]'''
 filter_funcs = [feature3]   
     
 def spr(filter_func, begin):
